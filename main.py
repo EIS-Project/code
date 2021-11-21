@@ -9,15 +9,12 @@ import logging
 import win32com.client
 from contextlib import suppress
 from pathlib import Path
-
-
-import serial
-import serial.tools.list_ports
 import time
 from datetime import datetime
 from tqdm import trange
 from Summary import summary
 from DUT import DUT
+from SerialComm import SerialComm
 
 def main():
     DUT_info = {
@@ -56,6 +53,9 @@ def main():
     create_shortcut(log_file, shortcut)
     logging.info('Program begins')
     experiment_date = f'{datetime.now():%m_%d_%Y_%H_%M}'
+    ## setup serial communication with microcontroller
+    serial1 = SerialComm(auto_connect=True)
+
     while current_time - start_time < total_seconds:
         logging.info(f'measurment time left: {total_seconds - current_time + start_time}s')
         print(current_time - start_time)
@@ -72,7 +72,7 @@ def main():
             DUTs[key].writer = pd.ExcelWriter(os.path.join(test_result_folder, f'{datetime.now():%m_%d_%Y_%H_%M}.xlsx'))  # create excel file for individual test under subfolder
             DUTs[key].sheetname = f'{datetime.now():%m_%d_%Y_%H_%M}'
             ## control ADG725 to change DUT channel
-            msg = auto_connect(key)
+            msg = serial1.RW(key)
             ## manual connect
             # msg = serial_read_write(key, port='COM7')
             if 'ok' not in msg:
@@ -102,87 +102,6 @@ def main():
     with suppress(FileNotFoundError):
         os.remove(shortcut)
     
-
-def num2SIunit(num):
-    SIunit = {
-        'p': 1e-12,
-        'n': 1e-9,
-        'u': 1e-6,
-        'm': 1e-3,
-        '': 1,
-        'k': 1e3,
-        'M': 1e6,
-        'G': 1e9,
-        'T': 1e12
-    }
-    for unit_, exponent_ in SIunit.items():
-        if abs(num) >= exponent_:
-            unit, exponent = unit_, exponent_
-        else:
-            return num/exponent, unit
-    return num, ''
-
-
-def auto_connect(msg):
-    # scan all the ports
-    for port in sorted([port[0] for port in list(serial.tools.list_ports.comports())], key=lambda x:int(x.split('COM')[-1]), reverse=False):
-        print(port)
-        try:
-            rx = serial_read_write(msg, port)
-            if 'ok' in rx:      # wait for acknowledgement,  device returns ok if the correct PORT is connected
-                return rx
-            else:
-                logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-                return None
-        except serial.serialutil.SerialException:   # else try to conenct next port
-            pass
-    return 
-
-
-def serial_read_write(msg, port='COM7'):
-    """send serial data to MCU
-
-    Args:
-        msg (str): msg to MCU, DUT number in this case
-        port (str, optional): COM port number. Defaults to 'COM7'.
-
-    Returns:
-        str: msg reply from MCU, currently set as 'ok, switched to DUT {msg}'
-    """
-    with serial.Serial(port=port, baudrate=9600, timeout=0.01) as ser:
-        ser.write(f"{msg}\r".encode('utf-8'))
-        time.sleep(0.1)
-        ser.flushOutput()
-        return read_data(ser)
-
-def read_data(ser):
-    data = ser.read(1)
-    data+= ser.read(ser.inWaiting())
-    if data:
-        return data.strip().decode('utf-8')
-
-def ckeck_num(data, minval, maxval):
-    """check if data is within minval and maxval
-
-    Args:
-        data (str | int): input data
-        minval (int): minimum value
-        maxval (int): maximam value
-
-    Raises:
-        ValueError: if data not within range or not number
-
-    Returns:
-        num: input data within range
-    """
-    try:
-        num = int(data)
-        if num in range(minval,maxval+1):
-            return num
-        raise ValueError
-    except ValueError:
-        print('invalid input: ', end='')
-        return ckeck_num(input(f'enter number between {minval}-{maxval}: '), minval, maxval)
     
 def create_shortcut(root_file, output_path):
     '''create shortcut of the root file
@@ -201,32 +120,3 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         logging.error(e)
-
-
-# def write_read(msg, arduino):
-#     arduino.write(bytes(msg, 'utf-8'))
-#     time.sleep(0.1)
-#     return arduino.readline(arduino.inWaiting()).strip().decode('utf-8')
-
-# def summary(output_dir, input_dir):
-#     """generate summary file, overlay all the results in one plot
-#     output_dir: where the summary file is saved
-#     input_dir: where the data files are
-#     """
-#     Summary = pd.ExcelWriter(os.path.join(output_dir, 'Summary.xlsx'))
-#     summary_table = []
-#     for root, dirs, files in os.walk(input_dir):
-#         for file in files:
-#             summary_table.append(pd.read_excel(os.path.join(input_dir,file), nrows=1, usecols=list(range(9,21))))
-#         df = pd.concat(summary_table)
-#         time_elapsed = df['Time Elapsed [s]'].to_list()
-#         df['date'] = pd.to_datetime(df['date'])  # convert date column in datetime format
-#         df.sort_values(by=['date'], ascending=False, inplace=True)
-#         print(df)
-#         df.to_excel(Summary, f'Summary', index=False,)
-#         worksheet = Summary.sheets['Summary']
-#         # Link to another Excel workbook.
-#         for row, file in enumerate(files):
-#             worksheet.write_url(row+1, df.shape[1]-1, os.path.join(input_dir,file), string=str(time_elapsed[row]))
-#         worksheet.set_column(0, df.shape[1]-1, 17.5)
-#         Summary.save()
