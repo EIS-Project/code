@@ -99,3 +99,22 @@ class DUT():
             if col != 'Hz':
                 df[col] = df[col].rolling(window=window).mean()
         return df
+ 
+    def num2SIunit(self, num):
+        SIunit = {
+            'p': 1e-12,
+            'n': 1e-9,
+            'u': 1e-6,
+            'm': 1e-3,
+            '': 1,
+            'k': 1e3,
+            'M': 1e6,
+            'G': 1e9,
+            'T': 1e12
+        }
+        for unit_, exponent_ in SIunit.items():
+            if abs(num) >= exponent_:
+                unit, exponent = unit_, exponent_
+            else:
+                return num/exponent, unit
+        return num, ''
