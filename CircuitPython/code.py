@@ -6,7 +6,7 @@ import board
 import busio
 import digitalio
 import time
-import supervisor
+import supervisor 
 
 
 def main():
