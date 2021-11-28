@@ -37,6 +37,7 @@ class DUT():
 
 
     def Impedance_Compensation(self):
+        
         open_circuit_param = AnalogImpedance_Analyzer(**self.MSMT_param)
 
     def generate_summary(self):

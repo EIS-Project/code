@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm, trange
 
 
-def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 10e3, amplitude = 1, offset = 0, Probe_capacitance = 0, Probe_resistance = 10e6):
+def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 10e3, amplitude = 1, offset = 0, Probe_capacitance = 0, Probe_resistance = 10e6, averages = 1):
     steps = int(steps)
     if sys.platform.startswith("win"):
         dwf = cdll.LoadLibrary("dwf.dll")
@@ -70,35 +70,36 @@ def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 1
         dwf.FDwfAnalogImpedanceFrequencySet(hdwf, c_double(hz)) # frequency in Hertz
         time.sleep(0.01) 
         dwf.FDwfAnalogImpedanceStatus(hdwf, None) # ignore last capture since we changed the frequency
-        while True:
-            if dwf.FDwfAnalogImpedanceStatus(hdwf, byref(sts)) == 0:
-                dwf.FDwfGetLastErrorMsg(szerr)
-                print(str(szerr.value))
-                quit()
-            if sts.value == 2:
-                break
-        resistance = c_double()
-        reactance = c_double()
-        phase = c_double()
-        SeriesCapactance = c_double()
-        ParallelCapactance = c_double()
-        SeriesInductance = c_double()
-        ParallelInductance = c_double()
-        # measurement options in WaveForms™ SDK Reference Manual p.101
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceResistance, byref(resistance))
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceReactance, byref(reactance))
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceImpedancePhase, byref(phase))
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceSeriesCapactance, byref(SeriesCapactance))
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceParallelCapacitance, byref(ParallelCapactance))
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceSeriesInductance, byref(SeriesInductance))
-        dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceParallelInductance, byref(ParallelInductance))
-        rg['Rs'][i] = resistance.value # absolute value for logarithmic plot
-        rg['Xs'][i] = reactance.value
-        rg['Phase'][i] = math.degrees(phase.value)
-        rg['Cs'][i] = SeriesCapactance.value
-        rg['Cp'][i] = ParallelCapactance.value
-        rg['Ls'][i] = SeriesInductance.value
-        rg['Lp'][i] = ParallelInductance.value
+        for _ in trange(averages):
+            while True:
+                if dwf.FDwfAnalogImpedanceStatus(hdwf, byref(sts)) == 0:
+                    dwf.FDwfGetLastErrorMsg(szerr)
+                    print(str(szerr.value))
+                    quit()
+                if sts.value == 2:
+                    break
+            resistance = c_double()
+            reactance = c_double()
+            phase = c_double()
+            SeriesCapactance = c_double()
+            ParallelCapactance = c_double()
+            SeriesInductance = c_double()
+            ParallelInductance = c_double()
+            # measurement options in WaveForms™ SDK Reference Manual p.101
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceResistance, byref(resistance))
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceReactance, byref(reactance))
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceImpedancePhase, byref(phase))
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceSeriesCapactance, byref(SeriesCapactance))
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceParallelCapacitance, byref(ParallelCapactance))
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceSeriesInductance, byref(SeriesInductance))
+            dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceParallelInductance, byref(ParallelInductance))
+            rg['Rs'][i] += resistance.value/averages # absolute value for logarithmic plot
+            rg['Xs'][i] += reactance.value/averages
+            rg['Phase'][i] += math.degrees(phase.value)/averages
+            rg['Cs'][i] += SeriesCapactance.value/averages
+            rg['Cp'][i] += ParallelCapactance.value/averages
+            rg['Ls'][i] += SeriesInductance.value/averages
+            rg['Lp'][i] += ParallelInductance.value/averages
 
 
 
