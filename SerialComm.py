@@ -52,7 +52,7 @@ class SerialComm:
             self.ser.write(f"{msg}\r".encode('utf-8'))
             time.sleep(0.1)
             self.ser.flushOutput()
-            return self.read_data(self.ser)
+            return self.read_data()
 
     def read_data(self):
         data = self.ser.read(1)

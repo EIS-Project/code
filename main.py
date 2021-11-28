@@ -51,7 +51,7 @@ def main():
     create_shortcut(log_file, shortcut)
     logging.info('Program begins')
     ## setup serial communication with microcontroller
-    ser = SerialComm(auto_connect=True)
+    ser = SerialComm(auto_connect=False)
 
     mux = AnalogMux(MSMT_param, ser) # create mux instance and measure open cirucit impedance
     
@@ -100,7 +100,6 @@ def create_shortcut(root_file, output_path):
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        logging.error(e)
+
+    main()
+
