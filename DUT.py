@@ -1,11 +1,11 @@
 import pandas as pd
 from pathlib import Path
 from scipy.signal import savgol_filter
-from AnalogImpedance_Analyzer import AnalogImpedance_Analyzer
+from lib.AnalogDiscovery2.AnalogImpedance_Analyzer import AnalogImpedance_Analyzer
 from datetime import datetime
 import os
 import time
-from Summary import summary
+from lib.generate_result.Summary import summary
 import logging
 
 class DUT():
