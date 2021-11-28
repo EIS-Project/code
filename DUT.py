@@ -8,13 +8,13 @@ import time
 from lib.generate_result.Summary import summary
 import logging
 
-class DUT():
-    def __init__(self, MSMT_param, channel, DUT_info, main_path, ser):
+class DUT:
+    def __init__(self, MSMT_param, channel, DUT_info, main_path, ser, mux):
         self.writer = None
         self.workbook = None
         self.window_size = 7  # set window size for filtering impedance measurement using Savitzky–Golay filter
         self.DUT_info = DUT_info        # store the info of the DUT
-        self.channel = channel
+        self._channel = channel
         self.MSMT_param = MSMT_param
         self.main_path = main_path
         experiment_date = f'{datetime.now():%m_%d_%Y_%H_%M}'
@@ -23,10 +23,16 @@ class DUT():
         self.create_folder(self.DUT_folder)     # create folder for each DUT
         self.create_folder(self.test_result_folder)  # create sub folder to store individual test result
         self.data = None
-        self.Z_oc = self.Open_Circuit_Impedance()
+        self.mux = mux
+        self.Z_oc = self.mux.Z_oc[self.channel]    # open circuit impedance of the current channel
         self.start_time = time.time()
-        self.ser = ser
         
+        
+        
+    @property
+    def channel(self):
+        return self._channel
+    
 
     def create_folder(self, dirpath):
         """create folder if not exist"""
@@ -131,14 +137,7 @@ class DUT():
         logging.info(f'Generate Summary file for {self.DUT_info}')
         summary(self.test_result_folder)
 
-    def Open_Circuit_Impedance(self):
-        """measure the open circuit imepdance for compensation
 
-        Returns:
-            [dict]: [parameters of open circuit imepdance measurement]
-        """
-        self.switch_channel()
-        return AnalogImpedance_Analyzer(**self.MSMT_param, averaging=5)
 
     def IQR_filter(self, df):
         # IQR filtering
@@ -179,12 +178,3 @@ class DUT():
             else:
                 return num/exponent, unit
         return num, ''
-
-    def switch_channel(self):
-        msg = self.ser.RW(self.channel)
-        ## manual connect
-        # msg = serial_read_write(key, port='COM7')
-        if 'ok' not in msg:
-            logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-            raise ConnectionError('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-        print(msg)

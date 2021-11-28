@@ -9,6 +9,7 @@ from pathlib import Path
 import time
 from datetime import datetime
 from tqdm import trange
+from AnalogMux import AnalogMux
 
 from DUT import DUT
 from SerialComm import SerialComm
@@ -52,17 +53,19 @@ def main():
     ## setup serial communication with microcontroller
     ser = SerialComm(auto_connect=True)
 
+    mux = AnalogMux(MSMT_param, ser) # create mux instance and measure open cirucit impedance
+    
+    for channel, info in DUT_info.items():    # create DUT instances
+        DUTs.append(DUT(MSMT_param, channel, info, main_path, ser, mux))
 
-
-    for key, val in DUT_info.items():    # create DUT instances
-        DUTs.append(DUT(**MSMT_param, key, val, main_path, ser))
+    
 
     ## measure impedance of each DUT within the total measurement time
     while current_time - start_time < total_seconds:
         logging.info(f'measurment time left: {total_seconds - current_time + start_time}s')
         print(current_time - start_time)
         for _DUT in DUTs:
-            _DUT.switch_channel()
+            mux.switch_channel(_DUT.channel)
             _DUT.Measure_Impedance()
             _DUT.Generate_Report()
         print('waiting for next measurement')
