@@ -26,32 +26,9 @@ class DUT():
         self.start_time = time.time()
         self.ser = ser
 
-    def switch_channel(self):
-        msg = self.ser.RW(self.channel)
-        ## manual connect
-        # msg = serial_read_write(key, port='COM7')
-        if 'ok' not in msg:
-            logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-            raise ConnectionError('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-        print(msg)
-
-
-    def Impedance_Compensation(self):
-        
-        open_circuit_param = AnalogImpedance_Analyzer(**self.MSMT_param)
-
-    def generate_summary(self):
-        logging.info(f'Generate Summary file for {self.DUT_info}')
-        summary(self.test_result_folder)
-
     def create_folder(self, dirpath):
         """create folder if not exist"""
         Path(dirpath).mkdir(parents=True, exist_ok=True)
-
-    def Measure_Impedance(self):
-        logging.info(f'Begin impedance measurement of {self.DUT_info}')
-        self.data = AnalogImpedance_Analyzer(**self.MSMT_param)
-        logging.info(f'Finished impedance measurement of {self.DUT_info}')
 
     def Generate_Report(self):
         self._Generate_Report(**self.MSMT_param) # too lazy to replace parameters in _Generate_Report function one by one
@@ -133,6 +110,14 @@ class DUT():
             chart.set_size({'x_scale': 1.2, 'y_scale': 1.5})
             worksheet.insert_chart(3+col*22, chart_colpos, chart)        # df.shape[0]: len(df.index), df.shape[1]: len(df.columns)
         self.writer.save()
+    
+    def Generate_Summary(self):
+        logging.info(f'Generate Summary file for {self.DUT_info}')
+        summary(self.test_result_folder)
+
+    def Open_Circuit_Impedance(self):
+
+            open_circuit_param = AnalogImpedance_Analyzer(**self.MSMT_param)
 
     def IQR_filter(self, df):
         # IQR filtering
@@ -143,6 +128,11 @@ class DUT():
             IQR = Q3 - Q1
             cols += [df[col].to_frame().query(f'(@Q1 - 1.5 * @IQR) <= {col} <= (@Q3 + 1.5 * @IQR)')]
         return pd.concat(cols, axis=1)
+
+    def Measure_Impedance(self):
+        logging.info(f'Begin impedance measurement of {self.DUT_info}')
+        self.data = AnalogImpedance_Analyzer(**self.MSMT_param)
+        logging.info(f'Finished impedance measurement of {self.DUT_info}')
 
     def moving_avg(self, df, window=7):
         for col in df.columns:
@@ -168,3 +158,12 @@ class DUT():
             else:
                 return num/exponent, unit
         return num, ''
+
+    def switch_channel(self):
+        msg = self.ser.RW(self.channel)
+        ## manual connect
+        # msg = serial_read_write(key, port='COM7')
+        if 'ok' not in msg:
+            logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+            raise ConnectionError('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+        print(msg)

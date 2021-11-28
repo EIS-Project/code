@@ -37,7 +37,7 @@ def main():
         'Probe_resistance': 1e6,
         'Probe_capacitance': AD2_capacitance+ADG725_capacitance
     }
-    DUTs = {}
+    DUTs = []
     interval = 10  # interval between measurements in seconds
     total_seconds = 60
     start_time = time.time()
@@ -53,12 +53,12 @@ def main():
     ser = SerialComm(auto_connect=True)
 
     for key, val in DUT_info.items():    # create DUT instances
-        DUTs[key] = DUT(**MSMT_param, key, val, main_path, ser)
+        DUTs.append(DUT(**MSMT_param, key, val, main_path, ser))
 
     while current_time - start_time < total_seconds:
         logging.info(f'measurment time left: {total_seconds - current_time + start_time}s')
         print(current_time - start_time)
-        for _DUT in DUTs.values():
+        for _DUT in DUTs:
             _DUT.switch_channel()
             _DUT.Measure_Impedance()
             _DUT.Generate_Report()
@@ -70,8 +70,8 @@ def main():
         
     
     ## generate Summary file for each DUT
-    for _DUT in DUTs.values():
-        _DUT.generate_summary()
+    for _DUT in DUTs:
+        _DUT.Generate_Summary()
         
     logging.info('Program Finished')
 

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm, trange
 
 
-def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 10e3, amplitude = 1, offset = 0, Probe_capacitance = 0, Probe_resistance = 10e6, averages = 1):
+def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 10e3, amplitude = 1, offset = 0, Probe_capacitance = 0, Probe_resistance = 10e6, averaging = 1):
     steps = int(steps)
     if sys.platform.startswith("win"):
         dwf = cdll.LoadLibrary("dwf.dll")
@@ -70,7 +70,7 @@ def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 1
         dwf.FDwfAnalogImpedanceFrequencySet(hdwf, c_double(hz)) # frequency in Hertz
         time.sleep(0.01) 
         dwf.FDwfAnalogImpedanceStatus(hdwf, None) # ignore last capture since we changed the frequency
-        for _ in trange(averages):
+        for _ in trange(averaging):
             while True:
                 if dwf.FDwfAnalogImpedanceStatus(hdwf, byref(sts)) == 0:
                     dwf.FDwfGetLastErrorMsg(szerr)
@@ -93,13 +93,13 @@ def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 1
             dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceParallelCapacitance, byref(ParallelCapactance))
             dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceSeriesInductance, byref(SeriesInductance))
             dwf.FDwfAnalogImpedanceStatusMeasure(hdwf, DwfAnalogImpedanceParallelInductance, byref(ParallelInductance))
-            rg['Rs'][i] += resistance.value/averages # absolute value for logarithmic plot
-            rg['Xs'][i] += reactance.value/averages
-            rg['Phase'][i] += math.degrees(phase.value)/averages
-            rg['Cs'][i] += SeriesCapactance.value/averages
-            rg['Cp'][i] += ParallelCapactance.value/averages
-            rg['Ls'][i] += SeriesInductance.value/averages
-            rg['Lp'][i] += ParallelInductance.value/averages
+            rg['Rs'][i] += resistance.value/averaging 
+            rg['Xs'][i] += reactance.value/averaging
+            rg['Phase'][i] += math.degrees(phase.value)/averaging
+            rg['Cs'][i] += SeriesCapactance.value/averaging
+            rg['Cp'][i] += ParallelCapactance.value/averaging
+            rg['Ls'][i] += SeriesInductance.value/averaging
+            rg['Lp'][i] += ParallelInductance.value/averaging
 
 
 
