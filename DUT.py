@@ -23,8 +23,10 @@ class DUT():
         self.create_folder(self.DUT_folder)     # create folder for each DUT
         self.create_folder(self.test_result_folder)  # create sub folder to store individual test result
         self.data = None
+        self.Z_oc = self.Open_Circuit_Impedance()
         self.start_time = time.time()
         self.ser = ser
+        
 
     def create_folder(self, dirpath):
         """create folder if not exist"""
@@ -34,6 +36,18 @@ class DUT():
         self._Generate_Report(**self.MSMT_param) # too lazy to replace parameters in _Generate_Report function one by one
 
     def _Generate_Report(self, start, stop, steps, amplitude, reference, offset, Probe_capacitance = 0, Probe_resistance = 0):
+        """generate report from the impedance measuremets from a single frequency sweep
+
+        Args:
+            start ([float]): [start frequency]
+            stop ([float]): [stop frequency]
+            steps ([int]): [frequency step size]
+            amplitude ([float]): [amplitude of the applied signal]
+            reference ([float]): [reference resistor value]
+            offset ([float]): [offset voltage of the applied signal]
+            Probe_capacitance (int, optional): [parasitic capacitance from the measurement point of the DUT to the input of the system]. Defaults to 0.
+            Probe_resistance (int, optional): [parasitic resistance from the measurement point of the DUT to the input of the system]. Defaults to 0.
+        """
         elapsed = time.time() - self.start_time
         data = self.data
         date = f'{datetime.now():%m/%d/%Y %H:%M:%S}'
@@ -112,12 +126,19 @@ class DUT():
         self.writer.save()
     
     def Generate_Summary(self):
+        """call summary function to generate summary file from all the measurements of the current DUT
+        """
         logging.info(f'Generate Summary file for {self.DUT_info}')
         summary(self.test_result_folder)
 
     def Open_Circuit_Impedance(self):
+        """measure the open circuit imepdance for compensation
 
-            open_circuit_param = AnalogImpedance_Analyzer(**self.MSMT_param)
+        Returns:
+            [dict]: [parameters of open circuit imepdance measurement]
+        """
+        self.switch_channel()
+        return AnalogImpedance_Analyzer(**self.MSMT_param, averaging=5)
 
     def IQR_filter(self, df):
         # IQR filtering

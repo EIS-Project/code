@@ -52,9 +52,12 @@ def main():
     ## setup serial communication with microcontroller
     ser = SerialComm(auto_connect=True)
 
+
+
     for key, val in DUT_info.items():    # create DUT instances
         DUTs.append(DUT(**MSMT_param, key, val, main_path, ser))
 
+    ## measure impedance of each DUT within the total measurement time
     while current_time - start_time < total_seconds:
         logging.info(f'measurment time left: {total_seconds - current_time + start_time}s')
         print(current_time - start_time)
@@ -67,7 +70,8 @@ def main():
         for _ in trange(interval):
             time.sleep(1)
         current_time = time.time()
-        
+    
+
     
     ## generate Summary file for each DUT
     for _DUT in DUTs:

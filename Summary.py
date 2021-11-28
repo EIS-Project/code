@@ -19,11 +19,11 @@ def concat_ws(parent, folder, bool):
 
 
 def summary(folder_path):
-    warnings.filterwarnings('ignore', category=UserWarning, module='xlsxwriter')
     """generate summary file, overlay all the results in one plot
     output_dir: where the summary file is saved
     input_dir: where the data files are
     """
+    warnings.filterwarnings('ignore', category=UserWarning, module='xlsxwriter')
     folder_name = os.path.basename(folder_path)
     output_path = os.path.join(folder_path, f'{folder_name}Summary.xlsx')
     Summary = pd.ExcelWriter(output_path)
