@@ -1,19 +1,67 @@
 import pandas as pd
 from pathlib import Path
 from scipy.signal import savgol_filter
+from AnalogImpedance_Analyzer import AnalogImpedance_Analyzer
+from datetime import datetime
+import os
+import time
+from Summary import summary
+import logging
 
 class DUT():
-    def __init__(self):
+    def __init__(self, MSMT_param, channel, DUT_info, main_path, ser):
         self.writer = None
         self.workbook = None
         self.window_size = 7  # set window size for filtering impedance measurement using Savitzky–Golay filter
-        self.DUT_info = None        # store the info of the DUT
+        self.DUT_info = DUT_info        # store the info of the DUT
+        self.channel = channel
+        self.MSMT_param = MSMT_param
+        self.main_path = main_path
+        experiment_date = f'{datetime.now():%m_%d_%Y_%H_%M}'
+        self.DUT_folder = os.path.join(self.main_path, f'{self.DUT_info}')
+        self.test_result_folder = os.path.join(self.main_path, f'{self.DUT_info}', experiment_date)
+        self.create_folder(self.DUT_folder)     # create folder for each DUT
+        self.create_folder(self.test_result_folder)  # create sub folder to store individual test result
+        self.data = None
+        self.start_time = time.time()
+        self.ser = ser
+
+    def switch_channel(self):
+        msg = self.ser.RW(self.channel)
+        ## manual connect
+        # msg = serial_read_write(key, port='COM7')
+        if 'ok' not in msg:
+            logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+            raise ConnectionError('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+        print(msg)
+
+
+    def Impedance_Compensation(self):
+        open_circuit_param = AnalogImpedance_Analyzer(**self.MSMT_param)
+
+    def generate_summary(self):
+        logging.info(f'Generate Summary file for {self.DUT_info}')
+        summary(self.test_result_folder)
 
     def create_folder(self, dirpath):
         """create folder if not exist"""
         Path(dirpath).mkdir(parents=True, exist_ok=True)
 
-    def Generate_Report(self, data, date, elapsed, start, stop, steps, amplitude, reference, offset, Probe_capacitance = 0, Probe_resistance = 0):
+    def Measure_Impedance(self):
+        logging.info(f'Begin impedance measurement of {self.DUT_info}')
+        self.data = AnalogImpedance_Analyzer(**self.MSMT_param)
+        logging.info(f'Finished impedance measurement of {self.DUT_info}')
+
+    def Generate_Report(self):
+        self._Generate_Report(**self.MSMT_param) # too lazy to replace parameters in _Generate_Report function one by one
+
+    def _Generate_Report(self, start, stop, steps, amplitude, reference, offset, Probe_capacitance = 0, Probe_resistance = 0):
+        elapsed = time.time() - self.start_time
+        data = self.data
+        date = f'{datetime.now():%m/%d/%Y %H:%M:%S}'
+        self.writer = pd.ExcelWriter(os.path.join(self.test_result_folder, f'{datetime.now():%m_%d_%Y_%H_%M}.xlsx'))  # create excel file for individual test under subfolder
+        self.sheetname = f'{datetime.now():%m_%d_%Y_%H_%M}'
+        
         info = pd.DataFrame({
             'date': date,
             'Connection': 'BreadBoard',
@@ -83,6 +131,7 @@ class DUT():
             chart.set_legend({'position': 'bottom'})
             chart.set_size({'x_scale': 1.2, 'y_scale': 1.5})
             worksheet.insert_chart(3+col*22, chart_colpos, chart)        # df.shape[0]: len(df.index), df.shape[1]: len(df.columns)
+        self.writer.save()
 
     def IQR_filter(self, df):
         # IQR filtering

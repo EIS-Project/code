@@ -1,9 +1,6 @@
 """setup and measure data from Analog Discovery Kit 2.
 """
-from AnalogImpedance_Analyzer import AnalogImpedance_Analyzer
-from AnalogImpedance_Compensation import AnalogImpedance_Compensation
 
-import pandas as pd
 import os
 import logging
 import win32com.client
@@ -12,7 +9,7 @@ from pathlib import Path
 import time
 from datetime import datetime
 from tqdm import trange
-from Summary import summary
+
 from DUT import DUT
 from SerialComm import SerialComm
 
@@ -52,38 +49,19 @@ def main():
     logging.basicConfig(format='%(asctime)s - %(message)s', filename = log_file, level=logging.INFO)
     create_shortcut(log_file, shortcut)
     logging.info('Program begins')
-    experiment_date = f'{datetime.now():%m_%d_%Y_%H_%M}'
     ## setup serial communication with microcontroller
-    serial1 = SerialComm(auto_connect=True)
+    ser = SerialComm(auto_connect=True)
+
+    for key, val in DUT_info.items():    # create DUT instances
+        DUTs[key] = DUT(**MSMT_param, key, val, main_path, ser)
 
     while current_time - start_time < total_seconds:
         logging.info(f'measurment time left: {total_seconds - current_time + start_time}s')
         print(current_time - start_time)
-        for key, val in DUT_info.items():
-            date = f'{datetime.now():%m/%d/%Y %H:%M:%S}'
-            DUT_folder = os.path.join(main_path, f'{val}')
-            test_result_folder = os.path.join(main_path, f'{val}', experiment_date)
-            if key not in DUTs:
-                DUTs[key] = DUT()
-                DUTs[key].create_folder(DUT_folder)     # create folder for each DUT
-                DUTs[key].create_folder(test_result_folder)  # create sub folder to store individual test result
-                DUTs[key].DUT_info = DUT_info[key]  # store the info of the DUT
-            
-            DUTs[key].writer = pd.ExcelWriter(os.path.join(test_result_folder, f'{datetime.now():%m_%d_%Y_%H_%M}.xlsx'))  # create excel file for individual test under subfolder
-            DUTs[key].sheetname = f'{datetime.now():%m_%d_%Y_%H_%M}'
-            ## control ADG725 to change DUT channel
-            msg = serial1.RW(key)
-            ## manual connect
-            # msg = serial_read_write(key, port='COM7')
-            if 'ok' not in msg:
-                logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-                return
-            print(msg)
-            logging.info(f'Begin impedance measurement of {val}')
-            data = AnalogImpedance_Analyzer(**MSMT_param)
-            DUTs[key].Generate_Report(data, date, current_time - start_time, **MSMT_param)
-            DUTs[key].writer.save()
-            logging.info(f'Finished impedance measurement of {val}')
+        for _DUT in DUTs.values():
+            _DUT.switch_channel()
+            _DUT.Measure_Impedance()
+            _DUT.Generate_Report()
         print('waiting for next measurement')
         ## delay with progress bar
         for _ in trange(interval):
@@ -92,10 +70,9 @@ def main():
         
     
     ## generate Summary file for each DUT
-    for val in DUT_info.values():
-        logging.info(f'Generate Summary file for {val}')
-        test_result_folder = os.path.join(main_path, f'{val}', experiment_date)
-        summary(test_result_folder)
+    for _DUT in DUTs.values():
+        _DUT.generate_summary()
+        
     logging.info('Program Finished')
 
     ## remove shortcut
