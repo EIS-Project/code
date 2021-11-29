@@ -22,10 +22,11 @@ class AnalogMux:
             [list of dicts]: [calibration result]
         """
         if os.path.exists('OpenCktImpedCalib.json'):
-            with open('data.json', 'r', encoding='utf-8') as f:
+            with open('OpenCktImpedCalib.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
         else:
-            with open('data.json', 'w', encoding='utf-8') as f:
+            input('please make sure pogos are not in contact with the board, press enter when ready')
+            with open('OpenCktImpedCalib.json', 'w', encoding='utf-8') as f:
                 json.dump(self.Open_Circuit_Impedance(), f, ensure_ascii=False, indent=4)
     
     def Open_Circuit_Impedance(self):
