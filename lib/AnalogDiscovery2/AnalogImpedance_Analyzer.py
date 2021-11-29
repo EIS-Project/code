@@ -70,7 +70,7 @@ def AnalogImpedance_Analyzer(steps = 101, start = 1e3, stop = 1e6, reference = 1
         dwf.FDwfAnalogImpedanceFrequencySet(hdwf, c_double(hz)) # frequency in Hertz
         time.sleep(0.01) 
         dwf.FDwfAnalogImpedanceStatus(hdwf, None) # ignore last capture since we changed the frequency
-        for _ in trange(averaging):
+        for _ in range(averaging):
             while True:
                 if dwf.FDwfAnalogImpedanceStatus(hdwf, byref(sts)) == 0:
                     dwf.FDwfGetLastErrorMsg(szerr)

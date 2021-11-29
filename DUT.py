@@ -9,7 +9,7 @@ from lib.generate_result.Summary import summary
 import logging
 
 class DUT:
-    def __init__(self, MSMT_param, channel, DUT_info, main_path, ser, mux):
+    def __init__(self, MSMT_param, channel, DUT_info, main_path, mux):
         self.writer = None
         self.workbook = None
         self.window_size = 7  # set window size for filtering impedance measurement using Savitzky–Golay filter
@@ -24,7 +24,7 @@ class DUT:
         self.create_folder(self.test_result_folder)  # create sub folder to store individual test result
         self.data = None
         self.mux = mux
-        # self.Z_oc = self.mux.Z_oc[self.channel]    # open circuit impedance of the current channel
+        self.Z_oc = self.mux.Z_oc[self.channel-1]    # open circuit impedance of the current channel
         self.start_time = time.time()
         
         
@@ -79,7 +79,7 @@ class DUT:
 
         df = pd.DataFrame(data)
         # add info of DUT to current dataframe
-        
+        # df = df.apply(lambda x:)
         df.insert(1, '|Z|', (df['Rs'].pow(2)+df['Xs'].pow(2)).pow(1./2)) 
         df['Cs'] *= 1e6
         df['Cp'] *= 1e9

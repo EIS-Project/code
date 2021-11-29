@@ -46,6 +46,14 @@ class AnalogMux:
             
     
     def switch_channel(self, channel):
+        """switch adg725 analog mux to the specified channel, the analog mux disconnect all channels if channel < 1
+
+        Args:
+            channel ([int]): [channel number]
+
+        Raises:
+            ConnectionError: [if channel switches unsuccessfully]
+        """
         msg = self.ser.RW(channel)
         ## manual connect
         # msg = serial_read_write(key, port='COM7')

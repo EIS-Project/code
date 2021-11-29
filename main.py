@@ -56,7 +56,7 @@ def main():
     mux = AnalogMux(MSMT_param, ser) # create mux instance and measure open cirucit impedance
     
     for channel, info in DUT_info.items():    # create DUT instances
-        DUTs.append(DUT(MSMT_param, channel, info, main_path, ser, mux))
+        DUTs.append(DUT(MSMT_param, channel, info, main_path, mux))
 
     
 
