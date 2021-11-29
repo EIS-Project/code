@@ -47,7 +47,7 @@ def main():
     Path(log_folder).mkdir(parents=True, exist_ok=True)
     log_file = os.path.join(log_folder, f'{datetime.now():%m_%d_%H_%M_%Y}.log')
     shortcut = os.path.join(main_path, 'measurement status.lnk')
-    logging.basicConfig(format='%(asctime)s - %(message)s', filename = log_file, level=logging.INFO)
+    logging.basicConfig(format='%(asctime)-8s - %(levelname)-8s: %(message)s', filename = log_file, level=logging.INFO)
     create_shortcut(log_file, shortcut)
     logging.info('Program begins')
     ## setup serial communication with microcontroller

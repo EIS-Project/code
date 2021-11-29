@@ -24,7 +24,7 @@ class DUT:
         self.create_folder(self.test_result_folder)  # create sub folder to store individual test result
         self.data = None
         self.mux = mux
-        self.Z_oc = self.mux.Z_oc[self.channel]    # open circuit impedance of the current channel
+        # self.Z_oc = self.mux.Z_oc[self.channel]    # open circuit impedance of the current channel
         self.start_time = time.time()
         
         

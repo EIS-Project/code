@@ -1,13 +1,32 @@
 from lib.AnalogDiscovery2.AnalogImpedance_Analyzer import AnalogImpedance_Analyzer
 import logging
 from tqdm import trange
-
+import json
+import os
 class AnalogMux:
     def __init__(self, MSMT_param, ser, num_channels=16) -> None:
         self.num_channels = num_channels
         self.MSMT_param = MSMT_param
         self.ser = ser
-        self.Z_oc = self.Open_Circuit_Impedance()
+        self._Z_oc = self.load_Z_oc()
+        
+    @property
+    def Z_oc(self):
+        return self._Z_oc
+    
+    def load_Z_oc(self):
+        """load previous open circuit impedance calibration if the calibration file exists, 
+        else run the open circuit impedance calibration and save as OpenCktImpedCalib.json in the current directory.
+
+        Returns:
+            [list of dicts]: [calibration result]
+        """
+        if os.path.exists('OpenCktImpedCalib.json'):
+            with open('data.json', 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            with open('data.json', 'w', encoding='utf-8') as f:
+                json.dump(self.Open_Circuit_Impedance(), f, ensure_ascii=False, indent=4)
     
     def Open_Circuit_Impedance(self):
         """measure the open circuit imepdance for compensation
@@ -17,8 +36,9 @@ class AnalogMux:
         """
         Z_oc = [None]*self.num_channels
         for i in trange(self.num_channels):
-            self.switch_channel(i)
-            # Z_oc[i] = AnalogImpedance_Analyzer(**self.MSMT_param, averaging=5)
+            self.switch_channel(i+1)
+            Z_oc[i] = AnalogImpedance_Analyzer(**self.MSMT_param, averaging=5)
+            logging.info(f'Complete open ckt impedance calibration of channel {i+1}')
         self.switch_channel(0)      # disconnect all channels
         
         return Z_oc
