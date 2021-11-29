@@ -1,6 +1,7 @@
 AD2_formatted/
 .vscode/
 MSMT_data/
+old stuff/
 
 *.pdf
 *.json
