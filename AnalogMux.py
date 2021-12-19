@@ -4,10 +4,10 @@ from tqdm import trange
 import json
 import os
 class AnalogMux:
-    def __init__(self, MSMT_param, ser, num_channels=16) -> None:
+    def __init__(self, MSMT_param, SerialComm, num_channels=16) -> None:
         self.num_channels = num_channels
         self.MSMT_param = MSMT_param
-        self.ser = ser
+        self.ser = SerialComm
         # self._Z_oc = self.load_Z_oc()
         
     @property
