@@ -51,7 +51,7 @@ def main():
     create_shortcut(log_file, shortcut)
     logging.info('Program begins')
     ## setup serial communication with microcontroller
-    ser = SerialComm(auto_connect=False)
+    ser = SerialComm(auto_connect=True)
 
     mux = AnalogMux(MSMT_param, ser) # create mux instance and measure open cirucit impedance
     

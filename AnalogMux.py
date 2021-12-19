@@ -8,7 +8,7 @@ class AnalogMux:
         self.num_channels = num_channels
         self.MSMT_param = MSMT_param
         self.ser = ser
-        self._Z_oc = self.load_Z_oc()
+        # self._Z_oc = self.load_Z_oc()
         
     @property
     def Z_oc(self):

@@ -1,4 +1,4 @@
-import serial
+import serial.tools.list_ports
 import time
 import logging
 
@@ -23,19 +23,18 @@ class SerialComm:
 
     def auto_connect(self, msg):
         # scan all the ports
-        sorted_ports = sorted([port[0] for port in list(serial.tools.list_ports.comports())], key=lambda x:int(x.split('COM')[-1]), reverse=False)  # ports sorted in ascending order
-        for self.COM in sorted_ports:
-            print(f'connecting to port{self.COM}')
-            try:
+        ports = serial.tools.list_ports.comports()
+        # sorted_ports = sorted(ports) # sorted([port[0] for port in list(serial.tools.list_ports.comports())], key=lambda x:int(x.split('COM')[-1]), reverse=False)  # ports sorted in ascending order
+        for port in sorted(ports):
+            if port.pid:
+                print(f'connecting to port {port}')
+                self.COM = port.name
                 rx = self.RW(msg)
+                print(rx)
                 if 'ok' in rx:      # wait for acknowledgement,  device returns ok if the correct PORT is connected
                     return rx
-                else:
-                    logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-                    return None
-            except serial.serialutil.SerialException:   # else try to conenct next port
-                pass
-        return 
+        logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+        raise ConnectionError('device not found') 
 
 
     def RW(self, msg):
@@ -59,3 +58,6 @@ class SerialComm:
         data+= self.ser.read(self.ser.inWaiting())
         if data:
             return data.strip().decode('utf-8')
+
+if __name__ == '__main__':
+    ser = SerialComm(auto_connect=True)
