@@ -14,30 +14,16 @@ from AnalogMux import AnalogMux
 from DUT import DUT
 from SerialComm import SerialComm
 
+import json5 as json
+
 def main():
-    DUT_info = {
-        # DUT no.: info
-        1: '75kOhm',
-        2: '820kOhm',
-        #6: 'W1DUT1M'
-        #12: '198.2KOhm',
-        14: '10kOhm',
-        16: '1.003kOhm'
-    }
-        
+
     main_path = r"C:\Users\User01\Desktop\EIS\Cal Poly\EIS Team - MSMT_data"
-    AD2_capacitance = 200e-12 # capacitance of Analog Discovery 2 + Probes
-    ADG725_capacitance = 175e-12 # Cd of ADG725 
-    MSMT_param = {
-        'steps': 501,
-        'start': 1e3,     
-        'stop': 10e6,
-        'reference': 0.989e6, #0.995e6,
-        'amplitude': 100e-3,
-        'offset': 200e-3,
-        'Probe_resistance': 1e6,
-        'Probe_capacitance': AD2_capacitance+ADG725_capacitance
-    }
+
+    with open('configuration.json') as f:
+        json_f = json.load(f)
+    DUT_info = json_f['DUT_info']
+    MSMT_param = json_f['MSMT_param']
     DUTs = []
     interval = 10  # interval between measurements in seconds
     total_seconds = 60

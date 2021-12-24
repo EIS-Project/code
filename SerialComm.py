@@ -1,15 +1,18 @@
 import serial.tools.list_ports
 import time
 import logging
-
+import json5 as json
 class SerialComm:
     # serial communication class
-    def __init__(self, COM='COM7', auto_connect=False) -> None:
+    def __init__(self, auto_connect=False) -> None:
+        with open('configuration.json') as f:
+            config = json.load(f)['Arduino']         # load settings from json file
+        self.baudrate = config['baudrate']
         self.ser = None
         if auto_connect:
             self.auto_connect(1)
         else:
-            self.COM = COM  # get COM port manually
+            self.COM = config['COM']  # get COM port manually
 
 
     def __enter__(self):
@@ -47,7 +50,7 @@ class SerialComm:
         Returns:
             str: msg reply from MCU, currently set as 'ok, switched to DUT {msg}'
         """
-        with serial.Serial(port=self.COM, baudrate=9600, timeout=0.01) as self.ser:
+        with serial.Serial(port=self.COM, baudrate=self.baudrate, timeout=0.01) as self.ser:
             self.ser.write(f"{msg}\r".encode('utf-8'))
             time.sleep(0.1)
             self.ser.flushOutput()
@@ -60,4 +63,4 @@ class SerialComm:
             return data.strip().decode('utf-8')
 
 if __name__ == '__main__':
-    ser = SerialComm(auto_connect=True)
+    ser = SerialComm(auto_connect=False)
