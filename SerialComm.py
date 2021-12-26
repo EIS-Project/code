@@ -1,3 +1,4 @@
+from sys import exc_info
 import serial.tools.list_ports
 import time
 import logging
@@ -28,16 +29,22 @@ class SerialComm:
         # scan all the ports
         ports = serial.tools.list_ports.comports()
         # sorted_ports = sorted(ports) # sorted([port[0] for port in list(serial.tools.list_ports.comports())], key=lambda x:int(x.split('COM')[-1]), reverse=False)  # ports sorted in ascending order
-        for port in sorted(ports):
-            if port.pid:
-                print(f'connecting to port {port}')
-                self.COM = port.name
-                rx = self.RW(msg)
-                print(rx)
-                if 'ok' in rx:      # wait for acknowledgement,  device returns ok if the correct PORT is connected
-                    return rx
-        logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
-        raise ConnectionError('device not found') 
+        try:
+            for port in sorted(ports):
+                if port.pid:
+                    print(f'connecting to port {port}')
+                    self.COM = port.name
+                    rx = self.RW(msg)
+                    print(rx)
+                    if 'ok' in rx:      # wait for acknowledgement,  device returns ok if the correct PORT is connected
+                        return rx
+            
+            
+            raise ConnectionError('serial communication device not found')
+        except:
+            logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+            logging.exception('message')
+
 
 
     def RW(self, msg):

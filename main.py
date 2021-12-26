@@ -22,7 +22,7 @@ def main():
 
     with open('configuration.json') as f:
         json_f = json.load(f)
-    DUT_info = json_f['DUT_info']
+    DUT_info = {int(key): val for key, val in json_f['DUT_info'].items()}   # convert key from string to integer
     MSMT_param = json_f['MSMT_param']
     DUTs = []
     interval = 10  # interval between measurements in seconds
@@ -33,13 +33,14 @@ def main():
     Path(log_folder).mkdir(parents=True, exist_ok=True)
     log_file = os.path.join(log_folder, f'{datetime.now():%m_%d_%H_%M_%Y}.log')
     shortcut = os.path.join(main_path, 'measurement status.lnk')
-    logging.basicConfig(format='%(asctime)-8s - %(levelname)-8s: %(message)s', filename = log_file, level=logging.INFO)
+    logging.basicConfig(format='%(asctime)-8s - %(levelname)-8s: %(message)s', filename = log_file, level=logging.DEBUG)
+    logging.getLogger().addHandler(logging.StreamHandler())
     create_shortcut(log_file, shortcut)
     logging.info('Program begins')
     ## setup serial communication with microcontroller
     ser = SerialComm(auto_connect=True)
 
-    mux = AnalogMux(MSMT_param, ser) # create mux instance and measure open cirucit impedance
+    mux = AnalogMux(ser) # create mux instance and measure open cirucit impedance
     
     for channel, info in DUT_info.items():    # create DUT instances
         DUTs.append(DUT(MSMT_param, channel, info, main_path, mux))
@@ -86,6 +87,8 @@ def create_shortcut(root_file, output_path):
 
 
 if __name__ == '__main__':
-
-    main()
+    try:
+        main()
+    except:
+        logging.exception('message')
 

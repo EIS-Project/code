@@ -33,8 +33,8 @@ class DUT:
     def channel(self):
         return self._channel
     
-
-    def create_folder(self, dirpath):
+    @staticmethod
+    def create_folder(dirpath):
         """create folder if not exist"""
         Path(dirpath).mkdir(parents=True, exist_ok=True)
 
@@ -138,8 +138,8 @@ class DUT:
         summary(self.test_result_folder)
 
 
-
-    def IQR_filter(self, df):
+    @staticmethod
+    def IQR_filter(df):
         # IQR filtering
         cols = []
         for col in df.columns:
@@ -154,13 +154,15 @@ class DUT:
         self.data = AnalogImpedance_Analyzer(**self.MSMT_param)
         logging.info(f'Finished impedance measurement of {self.DUT_info}')
 
-    def moving_avg(self, df, window=7):
+    @staticmethod
+    def moving_avg(df, window=7):
         for col in df.columns:
             if col != 'Hz':
                 df[col] = df[col].rolling(window=window).mean()
         return df
  
-    def num2SIunit(self, num):
+    @staticmethod
+    def num2SIunit(num):
         SIunit = {
             'p': 1e-12,
             'n': 1e-9,
