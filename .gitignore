@@ -5,7 +5,6 @@ MSMT_data/
 old stuff/
 
 *.pdf
-*.json
 test.py
 
 # Byte-compiled / optimized / DLL files
