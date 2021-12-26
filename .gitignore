@@ -5,6 +5,7 @@ MSMT_data/
 old stuff/
 
 *.pdf
+# json files
 OpenCktImpedCalib.json
 eis-project-329805-c799fd39eacd.json
 test.py
