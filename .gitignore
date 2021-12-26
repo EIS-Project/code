@@ -5,6 +5,8 @@ MSMT_data/
 old stuff/
 
 *.pdf
+OpenCktImpedCalib.json
+eis-project-329805-c799fd39eacd.json
 test.py
 
 # Byte-compiled / optimized / DLL files
