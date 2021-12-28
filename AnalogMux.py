@@ -38,21 +38,11 @@ class AnalogMux:
         Returns:
             [list of dicts]: [parameters of open circuit imepdance measurement]
         """
-        if os.path.exists('configuration.json'):
-            with open('configuration.json') as f:
-                MSMT_param = json.load(f)['MSMT_param']
+        if os.path.exists('configuration.py'):
+            from configuration import configuration
+            MSMT_param = configuration['MSMT_param']
         else:
-            logging.info('using default MSMT_param instead of loading from json file')
-            MSMT_param = {
-                "steps": 501,
-                "start": 1e3,
-                "stop": 10e6,
-                "reference": 0.989e6,
-                "amplitude": 100e-3,
-                "offset": 200e-3,
-                "Probe_resistance": 1e6,
-                "Probe_capacitance": 375e-12
-            }
+            raise FileNotFoundError('configuration.py not found')
         Z_oc = [None]*self.num_channels
         for i in trange(self.num_channels):
             self.switch_channel(i+1)

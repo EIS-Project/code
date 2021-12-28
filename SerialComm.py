@@ -2,12 +2,23 @@ from sys import exc_info
 import serial.tools.list_ports
 import time
 import logging
-import json5 as json
+import os
+
+
 class SerialComm:
     # serial communication class
     def __init__(self, auto_connect=False) -> None:
-        with open('configuration.json') as f:
-            config = json.load(f)['Arduino']         # load settings from json file
+        if os.path.exists('configuration.py'):
+            from configuration import configuration
+            # load settings
+            config = configuration['Arduino']
+        else:
+            logging.info(
+                'configuration.py not found, using default configuration for MSMT_param')
+            config = {
+                "COM": "COM7",
+                "baudrate": 9600
+            }
         self.baudrate = config['baudrate']
         self.ser = None
         if auto_connect:
@@ -15,11 +26,9 @@ class SerialComm:
         else:
             self.COM = config['COM']  # get COM port manually
 
-
     def __enter__(self):
         if not self.COM:
             self.auto_connect(1)
-
 
     def __exit__(self, type, value, traceback):
         if self.ser:
@@ -38,14 +47,12 @@ class SerialComm:
                     print(rx)
                     if 'ok' in rx:      # wait for acknowledgement,  device returns ok if the correct PORT is connected
                         return rx
-            
-            
+
             raise ConnectionError('serial communication device not found')
         except:
-            logging.error('usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
+            logging.error(
+                'usb timeout, program terminated, try clicking reset bottom on the PCB to resolve the issue')
             logging.exception('message')
-
-
 
     def RW(self, msg):
         """send serial data to MCU
@@ -65,9 +72,10 @@ class SerialComm:
 
     def read_data(self):
         data = self.ser.read(1)
-        data+= self.ser.read(self.ser.inWaiting())
+        data += self.ser.read(self.ser.inWaiting())
         if data:
             return data.strip().decode('utf-8')
+
 
 if __name__ == '__main__':
     ser = SerialComm(auto_connect=False)
