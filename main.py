@@ -9,10 +9,10 @@ from pathlib import Path
 import time
 from datetime import datetime
 from tqdm import trange
-from AnalogMux import AnalogMux
+from lib.AnalogMux import AnalogMux
 
-from DUT import DUT
-from SerialComm import SerialComm
+from lib.DUT import DUT
+from lib.SerialComm import SerialComm
 
 
 def main():

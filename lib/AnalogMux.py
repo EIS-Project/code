@@ -3,17 +3,38 @@ import logging
 from tqdm import trange
 import json
 import os
+import numpy as np
 
 
 class AnalogMux:
     def __init__(self, SerialComm, num_channels=16) -> None:
         self.num_channels = num_channels
         self.ser = SerialComm
+        self.C_load = 0
+        self.Ron = 4
+        self.Cd = 175e-12
+        self.R_load = 820e3
+        self.t_on = 0
+        self.t_off = 0
         # self._Z_oc = self.load_Z_oc()
 
     @property
     def Z_oc(self):
         return self._Z_oc
+
+    def tsett(self, on):
+        """calculate settling time of the switch
+        where Settling time is the time required for the switch output
+        to settle within a given error band of the final value
+
+        Args:
+            on (bool): True for switching on, False for switching on
+        """
+        error = 0.1     # % error
+        if on:
+            return self.t_on + (self.Ron * self.R_load / (self.Ron + self.R_load)) * (self.C_load+self.Cd) * (-np.log(error/100))
+        else:
+            return self.t_off + self.R_load * (self.C_load+self.Cd) * (-np.log(error/100))
 
     def load_Z_oc(self):
         """load previous open circuit impedance calibration if the calibration file exists, 
