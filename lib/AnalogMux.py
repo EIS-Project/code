@@ -1,3 +1,4 @@
+import pandas as pd
 from lib.AnalogDiscovery2.AnalogImpedance_Analyzer import AnalogImpedance_Analyzer
 import logging
 from tqdm import trange
@@ -30,6 +31,11 @@ class AnalogMux:
         Args:
             on (bool): True for switching on, False for switching on
         """
+
+        # table for Number of Time Constants Required to Settle to 1 LSB Accuracy for a Single-Pole System
+        table = pd.DataFrame({'Resolution': [6, 8, 10, 12, 14, 16, 18, 20, 22],
+                              'LSB': [1.563, 0.391, 0.0977, 0.0244, 0.0061, 0.00153, 0.00038, 0.000095, 0.000024],
+                              'Time Constants': [4.16, 5.55, 6.93, 8.32, 9.7, 11.09, 12.48, 13.86, 15.25]})
         error = 0.1     # % error
         if on:
             return self.t_on + (self.Ron * self.R_load / (self.Ron + self.R_load)) * (self.C_load+self.Cd) * (-np.log(error/100))
